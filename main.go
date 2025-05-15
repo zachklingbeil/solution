@@ -4,12 +4,42 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"slices"
 	"strconv"
 	"strings"
 )
 
 const key = "[Charger Availability Reports]"
+
+type Electric struct {
+	Map map[uint32]int
+}
+
+func NewElectric(path string) (*Electric, error) {
+	elec := &Electric{
+		Map: make(map[uint32]int),
+	}
+	reports, err := elec.Input(path)
+	if err != nil {
+		return nil, err
+	}
+	elec.ComputeUptime(reports)
+	return elec, nil
+}
+
+func main() {
+	if len(os.Args) != 2 {
+		fmt.Println("ERROR")
+		return
+	}
+	e, err := NewElectric(os.Args[1])
+	if err != nil {
+		fmt.Println("ERROR")
+		return
+	}
+	for key, value := range e.Map {
+		fmt.Printf("Charger %d: %d%% uptime\n", key, value)
+	}
+}
 
 type AvailabilityReport struct {
 	ChargerID      uint32
@@ -18,37 +48,30 @@ type AvailabilityReport struct {
 	Up             bool
 }
 
-func main() {
-	if len(os.Args) != 2 {
-		fmt.Println("ERROR")
-		return
-	}
-	reports, err := ParseAvailabilityReports(os.Args[1])
-	if err != nil {
-		fmt.Println("ERROR")
-		return
-	}
-	PrintChargerUptimes(reports)
-}
-
-func PrintChargerUptimes(reports []AvailabilityReport) {
+func (e *Electric) ComputeUptime(reports []AvailabilityReport) map[uint32]int {
 	chargerReports := make(map[uint32][]AvailabilityReport)
 	for _, r := range reports {
 		chargerReports[r.ChargerID] = append(chargerReports[r.ChargerID], r)
 	}
-
-	var chargerIDs []uint32
-	for id := range chargerReports {
-		chargerIDs = append(chargerIDs, id)
+	for id, reps := range chargerReports {
+		var totalUp, total uint64
+		for _, rep := range reps {
+			duration := rep.EndTimeNanos - rep.StartTimeNanos
+			total += duration
+			if rep.Up {
+				totalUp += duration
+			}
+		}
+		if total == 0 {
+			e.Map[id] = 0
+		} else {
+			e.Map[id] = int((totalUp * 100) / total)
+		}
 	}
-	slices.Sort(chargerIDs)
-
-	for _, cid := range chargerIDs {
-		fmt.Printf("%d %d\n", cid, CalculateChargerUptime(chargerReports[cid]))
-	}
+	return e.Map
 }
 
-func ParseAvailabilityReports(path string) ([]AvailabilityReport, error) {
+func (e *Electric) Input(path string) ([]AvailabilityReport, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, err
@@ -104,19 +127,4 @@ func ParseAvailabilityReports(path string) ([]AvailabilityReport, error) {
 		return nil, err
 	}
 	return reports, nil
-}
-
-func CalculateChargerUptime(reports []AvailabilityReport) int {
-	var totalUp, total uint64
-	for _, r := range reports {
-		duration := r.EndTimeNanos - r.StartTimeNanos
-		total += duration
-		if r.Up {
-			totalUp += duration
-		}
-	}
-	if total == 0 {
-		return 0
-	}
-	return int((totalUp * 100) / total)
 }
