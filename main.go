@@ -32,12 +32,12 @@ func Output(m map[uint32]int) {
 const key = "[Charger Availability Reports]"
 
 type Electric struct {
-	Reports   []AvailabilityReport
-	ReportMap map[uint32][]AvailabilityReport
+	Reports   []Report
+	ReportMap map[uint32][]Report
 	UptimeMap map[uint32]int
 }
 
-type AvailabilityReport struct {
+type Report struct {
 	ChargerID uint32
 	Start     uint64
 	End       uint64
@@ -46,24 +46,24 @@ type AvailabilityReport struct {
 
 func NewElectric(path string) *Electric {
 	elec := &Electric{
-		ReportMap: make(map[uint32][]AvailabilityReport),
+		ReportMap: make(map[uint32][]Report),
 		UptimeMap: make(map[uint32]int),
-		Reports:   make([]AvailabilityReport, 0),
+		Reports:   make([]Report, 0),
 	}
-	elec.ParseAvailabilityReports(path)
+	elec.ParseReports(path)
 	elec.BuildReportMap()
 	elec.ComputeUptime()
 	return elec
 }
 
-func (e *Electric) ParseAvailabilityReports(path string) error {
+func (e *Electric) ParseReports(path string) error {
 	file, err := os.Open(path)
 	if err != nil {
 		return nil
 	}
 	defer file.Close()
 
-	var reports []AvailabilityReport
+	var reports []Report
 	scanner := bufio.NewScanner(file)
 	inSection := false
 	for scanner.Scan() {
@@ -103,7 +103,7 @@ func (e *Electric) ParseAvailabilityReports(path string) error {
 			if err != nil {
 				continue
 			}
-			reports = append(reports, AvailabilityReport{
+			reports = append(reports, Report{
 				ChargerID: uint32(chargerID),
 				Start:     start,
 				End:       end,
