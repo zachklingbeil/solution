@@ -9,6 +9,8 @@ import (
 	"strings"
 )
 
+const key = "[Charger Availability Reports]"
+
 type AvailabilityReport struct {
 	ChargerID      uint32
 	StartTimeNanos uint64
@@ -26,14 +28,15 @@ func main() {
 		fmt.Println("ERROR")
 		return
 	}
+	PrintChargerUptimes(reports)
+}
 
-	// Group reports by charger
+func PrintChargerUptimes(reports []AvailabilityReport) {
 	chargerReports := make(map[uint32][]AvailabilityReport)
 	for _, r := range reports {
 		chargerReports[r.ChargerID] = append(chargerReports[r.ChargerID], r)
 	}
 
-	// Get sorted charger IDs
 	var chargerIDs []uint32
 	for id := range chargerReports {
 		chargerIDs = append(chargerIDs, id)
@@ -41,12 +44,10 @@ func main() {
 	slices.Sort(chargerIDs)
 
 	for _, cid := range chargerIDs {
-		uptime := CalculateChargerUptime(chargerReports[cid])
-		fmt.Printf("%d %d\n", cid, uptime)
+		fmt.Printf("%d %d\n", cid, CalculateChargerUptime(chargerReports[cid]))
 	}
 }
 
-// ParseAvailabilityReports parses only the [Charger Availability Reports] section.
 func ParseAvailabilityReports(path string) ([]AvailabilityReport, error) {
 	file, err := os.Open(path)
 	if err != nil {
@@ -62,42 +63,42 @@ func ParseAvailabilityReports(path string) ([]AvailabilityReport, error) {
 		if line == "" {
 			continue
 		}
-		if line == "[Charger Availability Reports]" {
-			inSection = true
+		if !inSection {
+			if line == key {
+				inSection = true
+			}
 			continue
 		}
+		// If we hit another section, stop processing
 		if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
-			inSection = false
-			continue
+			break
 		}
-		if inSection {
-			fields := strings.Fields(line)
-			if len(fields) != 4 {
-				return nil, fmt.Errorf("invalid availability line")
-			}
-			chargerID, err := strconv.ParseUint(fields[0], 10, 32)
-			if err != nil {
-				return nil, err
-			}
-			start, err := strconv.ParseUint(fields[1], 10, 64)
-			if err != nil {
-				return nil, err
-			}
-			end, err := strconv.ParseUint(fields[2], 10, 64)
-			if err != nil {
-				return nil, err
-			}
-			up, err := strconv.ParseBool(fields[3])
-			if err != nil {
-				return nil, err
-			}
-			reports = append(reports, AvailabilityReport{
-				ChargerID:      uint32(chargerID),
-				StartTimeNanos: start,
-				EndTimeNanos:   end,
-				Up:             up,
-			})
+		fields := strings.Fields(line)
+		if len(fields) != 4 {
+			return nil, fmt.Errorf("invalid availability line")
 		}
+		chargerID, err := strconv.ParseUint(fields[0], 10, 32)
+		if err != nil {
+			return nil, err
+		}
+		start, err := strconv.ParseUint(fields[1], 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		end, err := strconv.ParseUint(fields[2], 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		up, err := strconv.ParseBool(fields[3])
+		if err != nil {
+			return nil, err
+		}
+		reports = append(reports, AvailabilityReport{
+			ChargerID:      uint32(chargerID),
+			StartTimeNanos: start,
+			EndTimeNanos:   end,
+			Up:             up,
+		})
 	}
 	if err := scanner.Err(); err != nil {
 		return nil, err
@@ -105,7 +106,6 @@ func ParseAvailabilityReports(path string) ([]AvailabilityReport, error) {
 	return reports, nil
 }
 
-// CalculateChargerUptime computes the uptime percentage for a charger.
 func CalculateChargerUptime(reports []AvailabilityReport) int {
 	var totalUp, total uint64
 	for _, r := range reports {
