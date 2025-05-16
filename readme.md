@@ -8,15 +8,11 @@ go version
 go version go1.24.3 linux/amd64
 ```
 
-## build
+## install
 
 ```sh
-git clone https://github.com/zachklingbeil/electric.git
-mkdir -p ~/electric && cd ~/electric
-
-unzip path/to/electric.zip
-
-go build -o electric
+git clone https://github.com/zachklingbeil/challenge.git ~/zachklingbeil && cd ~/zachklingbeil
+go run main.go input1.txt
 ```
 
 ## execute
@@ -24,9 +20,8 @@ go build -o electric
 ```sh
 # from ~/electric
 
-./electric input1.txt
-
-./electric input2.txt
+./challenge input1.txt
+./challenge input2.txt
 ```
 
 # Introduction

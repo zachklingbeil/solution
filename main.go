@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/zachklingbeil/electric/fx"
+	"github.com/zachklingbeil/challenge/fx"
 )
 
 // main expects a single argument: the path to the input file.

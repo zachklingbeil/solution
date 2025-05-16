@@ -4,7 +4,7 @@ How to Apply (PLEASE READ CAREFULLY):
 
 In addition to applying here, please additionally do the following to be considered:
 
--   [Perform our coding challenge here](https://gitlab.com/electric-era-public/coding-challenge-charger-uptime)
+-   [Perform our coding challenge here](https://gitlab.com/electric-era-public/coding-challenge-charger-uptime/-/tree/5a0519e6d432d1c8c4cbdc6f29789fabf98ba15d/)
 
 -   In your submission email, include a link to a ~2 minute video introducing yourself and a project that you are most proud of. Impress us! Include pictures or videos of that project's in-progress or finished product.
 
