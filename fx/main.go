@@ -128,7 +128,7 @@ func (e *Era) Fx() {
 	}
 }
 
-// Output prints the uptime percentages for each charger ID, in ascending order.
+// Output prints uptime percentages for each charger ID, in ascending order, as unformatted ints.
 func (e *Era) Output(m map[uint32]int) {
 	keys := make([]uint32, 0, len(m))
 	for k := range m {

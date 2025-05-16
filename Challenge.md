@@ -1,4 +1,4 @@
-# [Embedded Software Engineer](https://electricera.tech/careers)
+# [Embedded Software Engineer](https://web.archive.org/web/20250516220754/https://electricera.tech/careers)
 
 How to Apply (PLEASE READ CAREFULLY):
 

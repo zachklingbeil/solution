@@ -11,7 +11,7 @@ go version go1.24.3 linux/amd64
 ## build
 
 ```sh
-git clone
+git clone https://github.com/zachklingbeil/electric.git
 mkdir -p ~/electric && cd ~/electric
 
 unzip path/to/electric.zip
@@ -55,7 +55,9 @@ I concluded:
 
 -   [Stations] data would require significant assumptions to be useful in calculations. [Stations] data should not be used in its current state.
 
--   [Charger Availability Reports] data is both structured and complete. [Charger Availability Reports] data will be the sole source of data.
+-   [Charger Availability Reports] data is both structured and complete.
+-
+-   [Charger Availability Reports] data will be the sole source of data.
 
 I'll need a program that can "find a needle in a haystack," undeterred by the the size of and/or quantity of haystacks.
 
