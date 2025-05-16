@@ -1,19 +1,16 @@
 # Build
-FROM --platform=$BUILDPLATFORM golang:latest AS go_builder
+FROM golang:latest AS go_builder
 WORKDIR /electric
 
 # Cache dependencies
 RUN --mount=type=cache,target=/go/pkg/mod/ \
-    --mount=type=bind,source=go.sum,target=go.sum \
     --mount=type=bind,source=go.mod,target=go.mod \
     go mod download -x
 
-ARG TARGETARCH
-
-# Build
+# Build for amd64 only
 RUN --mount=type=cache,target=/go/pkg/mod/ \
     --mount=type=bind,target=. \
-    CGO_ENABLED=0 GOARCH=$TARGETARCH go build -ldflags="-s -w" -o /bin/electric .
+    CGO_ENABLED=0 GOARCH=amd64 go build -ldflags="-s -w" -o /bin/electric .
 
 # Run
 FROM alpine:latest AS final
