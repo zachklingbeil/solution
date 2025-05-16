@@ -1,26 +1,30 @@
 # Demo
 
-requires: go v1.24.3
-
-```
-# execute
+```sh
+# requires: go v1.24.3
 go version
 
-# output
+# should output
 go version go1.24.3 linux/amd64
 ```
 
-handle dir
+## build
 
-```
-# zip -r electric.zip .
+```sh
+mkdir -p ~/electric && cd ~/electric
 
-# build, execute within repo
-mkdir -p electric && cd electric
 unzip path/to/electric.zip
+
 go build -o electric
+```
+
+## execute
+
+```sh
+# from ~/electric
 
 ./electric input1.txt
+
 ./electric input2.txt
 ```
 
@@ -52,37 +56,10 @@ I concluded:
 
 -   [Charger Availability Reports] data is both structured and complete. [Charger Availability Reports] data will be the sole source of data.
 
-I'll need a program that can "find a needle in a haystack," undeterred by the the size of and/or quantity of haystacks. Input haystack in the form of a .txt file, output needle(s).
+I'll need a program that can "find a needle in a haystack," undeterred by the the size of and/or quantity of haystacks.
 
-## Solution
+### **Please refer to main.go and fx/main.go for commented code detailing this solution.**
 
-I've written a program for calculating uptime for nodes in a network.
-
--- introduce package structure.
--- struct
--- methods
+## Final Thoughts
 
 ommissions vs commissions.
-
-```go
-package main
-
-import (
-   "fmt"
-   "os"
-
-   "github.com/zachklingbeil/electric/fx"
-)
-
-func main() {
-   if len(os.Args) != 2 {
-      fmt.Println("Need input to output.\nelectric <input file>")
-      return
-   }
-
-   era := fx.Electric()
-   era.Input(os.Args[1])
-   era.Fx()
-   era.Output(era.Uptime)
-}
-```
