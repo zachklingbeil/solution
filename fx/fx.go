@@ -103,8 +103,8 @@ func (e *Era) Input(path string) error {
 	return nil
 }
 
-// Fx groups reports by charger ID and calculates the uptime percentage for each charger.
-// Uptime is an int representing the percentage of time a charger was reported "up" over the total reported time
+// Fx maps reports by charger ID and calculates the uptime percentage for each charger.
+// Uptime is an int representing the percentage of time a charger was reported "up" over the total reported time.
 func (e *Era) Fx() {
 	for _, r := range e.Reports {
 		e.ReportMap[r.ChargerID] = append(e.ReportMap[r.ChargerID], r)

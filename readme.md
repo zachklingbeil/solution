@@ -1,88 +1,88 @@
-# Overview
+# Demo
 
-This is a simple coding challenge to test your abilities. To join the software program at Electric Era, you must complete this challenge.
-
-# Challenge
-
-You must write a program that calculates uptime for stations in a charging network.
-It will take in a formatted input file that indicates individual charger uptime status for a given time period and write output to standard-output (`stdout`).
-
-**Station Uptime** is defined as the percentage of time that any charger at a station was available, out of the entire time period that any charger _at that station_ was reporting in.
-
-## Input File Format
-
-The input file will be a simple ASCII text file. The first section will be a list of station IDs that indicate the Charger IDs present at each station. The second section will be a report of each Charger ID's availability reports. An availability report will contain the Charger ID, the start time, the end time, and if the charger was "up" (i.e. available) or not.
-
-The following preconditons will apply:
-
--   Station ID will be guaranteed to be a **unsigned 32-bit integer** and guaranteed to be unique to any other Station ID.
--   Charger ID will be guaranteed to be a **unsigned 32-bit integer** and guaranteed to be unique across all Station IDs.
--   `start time nanos` and `end time nanos` are guaranteed to fit within a **unsigned 64-bit integer**.
--   `up` will always be `true` or `false`
--   Each Charger ID may have multiple availability report entries.
--   Report entries need not be contiguous in time for a given Charger ID. A gap in time in a given Charger ID's availability report should count as downtime.
+requires: go v1.24.3
 
 ```
-[Stations]
-<Station ID 1> <Charger ID 1> <Charger ID 2> ... <Charger ID n>
-...
-<Station ID n> ...
+# execute
+go version
 
-[Charger Availability Reports]
-<Charger ID 1> <start time nanos> <end time nanos> <up (true/false)>
-<Charger ID 1> <start time nanos> <end time nanos> <up (true/false)>
-...
-<Charger ID 2> <start time nanos> <end time nanos> <up (true/false)>
-<Charger ID 2> <start time nanos> <end time nanos> <up (true/false)>
-...
-<Charger ID n> <start time nanos> <end time nanos> <up (true/false)>
+# output
+go version go1.24.3 linux/amd64
 ```
 
-## Program Parameters and Runtime Conditions
-
-Your program will be executed in a Linux environment running on an `amd64` architecture. If your chosen language of submission is compiled, ensure it compiles in that environment. Please avoid use of non-standard dependencies.
-
-The program should accept a single argument, the path to the input file. The input file may not necessarily be co-located in the same folder as the program.
-
-Example CLI execution:
+handle dir
 
 ```
-./your_submission relative/path/to/input/file
+# zip -r electric.zip .
+
+# build, execute within repo
+mkdir -p electric && cd electric
+unzip path/to/electric.zip
+go build -o electric
+
+./electric input1.txt
+./electric input2.txt
 ```
 
-## Output Format
+# Introduction
 
-The output shall be written to `stdout`. If the input is invalid, please simply print `ERROR` and exit. `stderr` may contain detailed error information but is not mandatory. If there is no error, please write `stdout` as follows, and then exit gracefully.
+### Before coding a single character, and certainly, only after reading README.md...
 
+I examined the initial data and noticed the files contents had two distinct sections - [Stations] and [Charger Availability Reports] - and made the following observations:
+
+### [Stations]
+
+-   data seems to be formatted as a table with three rows
+-   the first values in each row are 0, 1, and 2. Did someone copy line numbers from their text editor?
+-   either way, they are all ints, they can be used as keys for parsing data in the row
+-   the first row has data in two columns, the other two only have data in one column.
+
+### [Charger Availability Reports]
+
+-   Each row has data in four columns, values separated by spaces.
+-   the first values in each row are ints which can also be used as keys.
+-   this time, however, there are duplicate keys which means i’ll need to map the data.
+-   Duplicate keys are indicative of data recorded over time.
+
+Based on these observations and assuming the structure of data received from the source cannot be modified and alternative data sources are either unavailable and/or unfeasible…
+
+I concluded:
+
+-   [Stations] data would require significant assumptions to be useful in calculations. [Stations] data should not be used in its current state.
+
+-   [Charger Availability Reports] data is both structured and complete. [Charger Availability Reports] data will be the sole source of data.
+
+I'll need a program that can "find a needle in a haystack," undeterred by the the size of and/or quantity of haystacks. Input haystack in the form of a .txt file, output needle(s).
+
+## Solution
+
+I've written a program for calculating uptime for nodes in a network.
+
+-- introduce package structure.
+-- struct
+-- methods
+
+ommissions vs commissions.
+
+```go
+package main
+
+import (
+   "fmt"
+   "os"
+
+   "github.com/zachklingbeil/electric/fx"
+)
+
+func main() {
+   if len(os.Args) != 2 {
+      fmt.Println("Need input to output.\nelectric <input file>")
+      return
+   }
+
+   era := fx.Electric()
+   era.Input(os.Args[1])
+   era.Fx()
+   era.Output(era.Uptime)
+}
 ```
-<Station ID 1> <Station ID 1 uptime>
-<Station ID 2> <Station ID 2 uptime>
-...
-<Station ID n> <Station ID n uptime>
-```
-
-`Station ID n uptime` should be an integer in the range [0-100] representing the given station's uptime percentage. The value should be rounded down to the nearest percent.
-
-Please output Station IDs in _ascending order_.
-
-# Testing and Submission
-
-This repository contains a few example input files, along with the expected stdout output (this expected stdout is encoded in a separate paired file).
-
-Please submit the following in a zip file to `coding-challenge-submissions@electricera.tech` for consideration:
-
--   Your full source code for the solution
--   Any explanatory documents (text file, markdown, or PDF)
--   Any unit/integration tests
--   Instructions on how to compile (if compiled) and run the solution
-
-If any component of the prompt is ambiguous or under-defined, please explain how your program resolves that ambiguity in your explanatory documents.
-
-# Considerations
-
-All aspects of your solution will be considered. Be mindful of:
-
--   Correctness for both normal and edge cases
--   Error-handling for improper inputs or unmet preconditions
--   Maintainability and readability of your solution
--   Scalability of the solution with increasingly large datasets
