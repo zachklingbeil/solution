@@ -11,6 +11,7 @@ go version go1.24.3 linux/amd64
 ## build
 
 ```sh
+git clone
 mkdir -p ~/electric && cd ~/electric
 
 unzip path/to/electric.zip

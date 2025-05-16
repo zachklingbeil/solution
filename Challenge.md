@@ -1,8 +1,20 @@
-# Overview
+# [Embedded Software Engineer](https://electricera.tech/careers)
+
+How to Apply (PLEASE READ CAREFULLY):
+
+In addition to applying here, please additionally do the following to be considered:
+
+-   [Perform our coding challenge here](https://gitlab.com/electric-era-public/coding-challenge-charger-uptime)
+
+-   In your submission email, include a link to a ~2 minute video introducing yourself and a project that you are most proud of. Impress us! Include pictures or videos of that project's in-progress or finished product.
+
+-   Please provide your resume and the specific position (Embedded Software Engineer) you are applying to in your submission email.
+
+# Challenge
 
 This is a simple coding challenge to test your abilities. To join the software program at Electric Era, you must complete this challenge.
 
-# Challenge
+## Overview
 
 You must write a program that calculates uptime for stations in a charging network.
 It will take in a formatted input file that indicates individual charger uptime status for a given time period and write output to standard-output (`stdout`).
