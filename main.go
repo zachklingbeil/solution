@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/zachklingbeil/challenge/fx"
+	v2 "github.com/zachklingbeil/challenge/v2"
 )
 
 // main expects a single argument: the path to the input file.
@@ -16,8 +16,8 @@ func main() {
 		return
 	}
 
-	era := fx.Electric()   // initialize new Era
-	era.Input(os.Args[1])  // parse
-	era.Fx()               // calculate
-	era.Output(era.Uptime) // results
+	era := v2.NewFx() // initialize new Era
+	era.ParseReportsFromFile(os.Args[1])
+	era.CalculateUptime()
+	era.PrintStationUptime()
 }
