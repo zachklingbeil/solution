@@ -4,138 +4,147 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"slices"
 	"strconv"
 	"strings"
 )
 
-// key is the section header for charger availability reports in the input file.
-const key = "[Charger Availability Reports]"
+const (
+	Stations = "[Stations]"
+	Chargers = "[Charger Availability Reports]"
+)
 
-// Lines in the input file are treated as rows.
-// Values within a row are separated by a single space.
-// Each line has 4 values.
+type Era struct {
+	Uptime []Uptime                       // StationID -> Uptime percentage
+	Source map[uint32]map[uint32][]Report // StationID -> ChargerID -> []Report
+}
+
 type Report struct {
 	ChargerID uint32
-	Start     uint64 // nano timestamp
-	End       uint64 // nano timestamp
-	Up        bool   // or down
+	Start     uint64
+	End       uint64
+	Up        bool
 }
 
-// The Report struct matches both the order and type of values found in each row.
-// Fields in the Report struct provide columns for working with our tabular data source.
-// []Report scales automatically to match the number of lines within the [Charger Availability Reports] section.
-type Era struct {
-	Reports   []Report
-	ReportMap map[uint32][]Report
-	Uptime    map[uint32]int
+type Uptime struct {
+	StationID uint32
+	Percent   int
 }
 
-// NewEra creates and returns a new Era instance with initialized fields.
 func Electric() *Era {
 	return &Era{
-		ReportMap: make(map[uint32][]Report),
-		Uptime:    make(map[uint32]int),
-		Reports:   make([]Report, 0),
+		Uptime: make([]Uptime, 0),
+		Source: make(map[uint32]map[uint32][]Report),
 	}
 }
 
-// Input reads and parses charger reports from the specified file path.
-// Returns an error if the file cannot be opened.
 func (e *Era) Input(path string) error {
 	file, err := os.Open(path)
 	if err != nil {
-		return fmt.Errorf("failed to open file: %w", err)
+		return fmt.Errorf("failed to open file %s: %w", path, err)
 	}
 	defer file.Close()
-
-	var reports []Report
 	scanner := bufio.NewScanner(file)
-	inSection := false
+
+	// Process the [Stations] section
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if line == "" {
 			continue
 		}
-		// Look for the section header
-		if !inSection {
-			if line == key {
-				inSection = true
-			}
+		if line == Chargers {
+			break // Exit when reaching the [Chargers] section
+		}
+		if line != Stations {
+			e.parseStations(line)
+		}
+	}
+	// Process the [Chargers] section
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" {
 			continue
 		}
-		// Stop if a new section starts
-		if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
-			break
+		e.parseChargerLine(line)
+	}
+	return nil
+}
+
+func (e *Era) parseStations(line string) error {
+	fields := strings.Fields(line)
+	stationID, _ := strconv.ParseUint(fields[0], 10, 32)
+	station := uint32(stationID)
+	if _, exists := e.Source[station]; !exists {
+		e.Source[station] = make(map[uint32][]Report)
+	}
+
+	for _, chargerStr := range fields[1:] {
+		chargerID, _ := strconv.ParseUint(chargerStr, 10, 32)
+		charger := uint32(chargerID)
+		if _, exists := e.Source[station][charger]; !exists {
+			e.Source[station][charger] = []Report{}
 		}
-		fields := strings.Fields(line)
-		if len(fields) < 4 || len(fields)%4 != 0 {
-			continue
-		}
-		// Parse each report in the line
-		for i := 0; i+3 < len(fields); i += 4 {
-			chargerID, err := strconv.ParseUint(fields[i], 10, 32)
-			if err != nil {
-				continue
-			}
-			start, err := strconv.ParseUint(fields[i+1], 10, 64)
-			if err != nil {
-				continue
-			}
-			end, err := strconv.ParseUint(fields[i+2], 10, 64)
-			if err != nil {
-				continue
-			}
-			up, err := strconv.ParseBool(fields[i+3])
-			if err != nil {
-				continue
-			}
-			// Create a new report and append it to the reports slice
-			reports = append(reports, Report{
-				ChargerID: uint32(chargerID),
+	}
+	return nil
+}
+
+func (e *Era) parseChargerLine(line string) error {
+	fields := strings.Fields(line)
+	if len(fields) != 4 {
+		return fmt.Errorf("invalid charger line: %s (expected exactly 4 fields)", line)
+	}
+
+	chargerID, _ := strconv.ParseUint(fields[0], 10, 32)
+	start, _ := strconv.ParseUint(fields[1], 10, 64)
+	end, _ := strconv.ParseUint(fields[2], 10, 64)
+	up, _ := strconv.ParseBool(fields[3])
+
+	charger := uint32(chargerID)
+	for stationID, chargers := range e.Source {
+		if _, exists := chargers[charger]; exists {
+			e.Source[stationID][charger] = append(e.Source[stationID][charger], Report{
+				ChargerID: charger,
 				Start:     start,
 				End:       end,
 				Up:        up,
 			})
+			return nil
 		}
 	}
-	e.Reports = reports
-	return nil
+	return fmt.Errorf("charger ID %d does not belong to any station", chargerID)
 }
 
-// Fx maps reports by charger ID and calculates the uptime percentage for each charger.
-// Uptime is an int representing the percentage of time a charger was reported "up" over the total reported time.
 func (e *Era) Fx() {
-	for _, r := range e.Reports {
-		e.ReportMap[r.ChargerID] = append(e.ReportMap[r.ChargerID], r)
-	}
-
-	for id, reps := range e.ReportMap {
+	for stationID, chargers := range e.Source {
 		var totalUp, total uint64
-		for _, rep := range reps {
-			duration := rep.End - rep.Start
-			total += duration
-			if rep.Up {
-				totalUp += duration
+		for _, reports := range chargers {
+			minStart, maxEnd, upTime := reports[0].Start, reports[0].End, uint64(0)
+			for _, r := range reports {
+				if r.Start < minStart {
+					minStart = r.Start
+				}
+				if r.End > maxEnd {
+					maxEnd = r.End
+				}
+				if r.Up {
+					upTime += r.End - r.Start
+				}
 			}
+			total += maxEnd - minStart
+			totalUp += upTime
 		}
-		if total == 0 {
-			e.Uptime[id] = 0
-		} else {
-			// rounded down to the nearest percent
-			e.Uptime[id] = int((totalUp * 100) / total)
+		percent := 0
+		if total > 0 {
+			percent = int((totalUp * 100) / total)
 		}
+		e.Uptime = append(e.Uptime, Uptime{
+			StationID: stationID,
+			Percent:   percent,
+		})
 	}
 }
 
-// Output prints uptime percentages for each charger ID, in ascending order, as unformatted ints.
-func (e *Era) Output(m map[uint32]int) {
-	keys := make([]uint32, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-	slices.Sort(keys)
-	for _, k := range keys {
-		fmt.Printf("%d %d\n", k, m[k])
+func (e *Era) Output() {
+	for _, uptime := range e.Uptime {
+		println(uptime.StationID, uptime.Percent)
 	}
 }

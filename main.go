@@ -1,23 +1,37 @@
 package main
 
 import (
+	_ "embed"
 	"fmt"
 	"os"
 
-	v2 "github.com/zachklingbeil/challenge/v2"
+	"github.com/zachklingbeil/challenge/fx"
 )
 
-// main expects a single argument: the path to the input file.
-// If the argument is missing, it prints usage instructions and exits.
-// Otherwise, output uptime results.
+//go:embed input1.txt
+var input1 string
+
+//go:embed input2.txt
+var input2 string
+
 func main() {
 	if len(os.Args) != 2 {
 		fmt.Println("Need input to output.\nelectric <input file>")
 		return
 	}
 
-	era := v2.NewFx() // initialize new Era
-	era.ParseReportsFromFile(os.Args[1])
-	era.CalculateUptime()
-	era.PrintStationUptime()
+	var source string
+	switch os.Args[1] {
+	case "1":
+		source = "input1.txt"
+	case "2":
+		source = "input2.txt"
+	default:
+		source = os.Args[1]
+	}
+
+	era := fx.Electric()
+	era.Input(source)
+	era.Fx()
+	era.Output()
 }
