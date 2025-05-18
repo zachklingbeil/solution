@@ -3,36 +3,29 @@
 ## install
 
 ```sh
-# requires go v1.24.3
-❯ go version
-go version go1.24.3 linux/amd64
-
-# run go.sh to install latest version of golang for linux-amd64
-# sudo ./go.sh
-```
-
-```sh
 # binary from "go build -o solution" included in repo
 git clone https://github.com/zachklingbeil/solution.git ~/zachklingbeil && cd ~/zachklingbeil
 ```
 
-## execute
+### execute
 
 ```sh
 ./solution input1.txt
 
 # output
-0 100
-1 0
-2 75
+
+# 0 100
+# 1 0
+# 2 75
 ```
 
 ```sh
 ./solution input2.txt
 
 # output
-0 66
-1 100
+
+# 0 66
+# 1 100
 ```
 
 # Introduction
