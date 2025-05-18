@@ -9,8 +9,8 @@ import (
 
 func main() {
 	if len(os.Args) != 2 {
-		fmt.Println("outputs require inputs")
-		fmt.Println("\nmissing path/to/<input>.txt")
+		fmt.Println("outputs require inputs\nuse:")
+		fmt.Println("./solution input1.txt\nor\n./solution input2.txt")
 		return
 	}
 
