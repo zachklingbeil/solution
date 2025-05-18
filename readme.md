@@ -2,9 +2,8 @@
 
 ## install
 
-requires go v1.24.3
-
 ```sh
+# requires go v1.24.3
 ❯ go version
 go version go1.24.3 linux/amd64
 
@@ -14,7 +13,7 @@ go version go1.24.3 linux/amd64
 
 ```sh
 # binary from "go build -o solution" included in repo
-git clone https://github.com/zachklingbeil/solution.git ~/zk && cd ~/zk
+git clone https://github.com/zachklingbeil/solution.git ~/zachklingbeil && cd ~/zachklingbeil
 ```
 
 ## execute
@@ -29,7 +28,7 @@ git clone https://github.com/zachklingbeil/solution.git ~/zk && cd ~/zk
 ```
 
 ```sh
-./challenge input2.txt
+./solution input2.txt
 
 # output
 0 66
