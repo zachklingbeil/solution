@@ -1,27 +1,39 @@
 # Demo
 
-```sh
-# requires: go v1.24.3
-go version
-
-# should output
-go version go1.24.3 linux/amd64
-```
-
 ## install
 
+requires go v1.24.3
+
 ```sh
-git clone https://github.com/zachklingbeil/challenge.git ~/zachklingbeil && cd ~/zachklingbeil
-go run main.go input1.txt
+❯ go version
+go version go1.24.3 linux/amd64
+
+# run go.sh to install latest version of golang for linux-amd64
+# sudo ./go.sh
+```
+
+```sh
+# binary from "go build -o solution" included in repo
+git clone https://github.com/zachklingbeil/solution.git ~/zk && cd ~/zk
 ```
 
 ## execute
 
 ```sh
-# from ~/electric
+./solution input1.txt
 
-./challenge input1.txt
+# output
+0 100
+1 0
+2 75
+```
+
+```sh
 ./challenge input2.txt
+
+# output
+0 66
+1 100
 ```
 
 # Introduction

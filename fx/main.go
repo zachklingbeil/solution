@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -14,14 +15,14 @@ const (
 )
 
 type Era struct {
-	Uptime []Uptime                       // StationID -> Uptime percentage
 	Source map[uint32]map[uint32][]Report // StationID -> ChargerID -> []Report
+	Uptime []Uptime                       // StationID -> Uptime percentag
 }
 
 type Report struct {
 	ChargerID uint32
-	Start     uint64
-	End       uint64
+	Start     uint64 // nanos
+	End       uint64 // nanos
 	Up        bool
 }
 
@@ -69,48 +70,49 @@ func (e *Era) Input(path string) error {
 	return nil
 }
 
+// parseStations parses a line describing a station and its chargers.
+// It adds the station and its chargers to the Source map.
 func (e *Era) parseStations(line string) error {
-	fields := strings.Fields(line)
-	stationID, _ := strconv.ParseUint(fields[0], 10, 32)
+	value := strings.Fields(line)
+	stationID, _ := strconv.ParseUint(value[0], 10, 32) // Parse the station ID from the first field
 	station := uint32(stationID)
 	if _, exists := e.Source[station]; !exists {
-		e.Source[station] = make(map[uint32][]Report)
+		e.Source[station] = make(map[uint32][]Report) // Initialize the chargers map for this station if not present
 	}
 
-	for _, chargerStr := range fields[1:] {
-		chargerID, _ := strconv.ParseUint(chargerStr, 10, 32)
-		charger := uint32(chargerID)
+	for _, chargerStr := range value[1:] {
+		id, _ := strconv.ParseUint(chargerStr, 10, 32) // Parse each charger ID
+		charger := uint32(id)
 		if _, exists := e.Source[station][charger]; !exists {
-			e.Source[station][charger] = []Report{}
+			e.Source[station][charger] = []Report{} // Initialize an empty report slice for each charger
 		}
 	}
 	return nil
 }
 
+// parseChargerLine parses a line describing a charger report and adds it to the correct station/charger.
+// Returns an error if the charger is not found in any station.
 func (e *Era) parseChargerLine(line string) error {
-	fields := strings.Fields(line)
-	if len(fields) != 4 {
-		return fmt.Errorf("invalid charger line: %s (expected exactly 4 fields)", line)
-	}
+	value := strings.Fields(line)
+	id, _ := strconv.ParseUint(value[0], 10, 32)    // Parse charger IDw
+	start, _ := strconv.ParseUint(value[1], 10, 64) // Parse start time
+	end, _ := strconv.ParseUint(value[2], 10, 64)   // Parse end time
+	up, _ := strconv.ParseBool(value[3])            // Parse up status (true/false)
 
-	chargerID, _ := strconv.ParseUint(fields[0], 10, 32)
-	start, _ := strconv.ParseUint(fields[1], 10, 64)
-	end, _ := strconv.ParseUint(fields[2], 10, 64)
-	up, _ := strconv.ParseBool(fields[3])
-
-	charger := uint32(chargerID)
+	charger := uint32(id)
 	for stationID, chargers := range e.Source {
 		if _, exists := chargers[charger]; exists {
+			// Append the report to the correct charger under the correct station
 			e.Source[stationID][charger] = append(e.Source[stationID][charger], Report{
 				ChargerID: charger,
 				Start:     start,
 				End:       end,
 				Up:        up,
 			})
-			return nil
+			return nil // Successfully added, exit
 		}
 	}
-	return fmt.Errorf("charger ID %d does not belong to any station", chargerID)
+	return fmt.Errorf("charger ID %d does not belong to any station", id) // Error if charger not found
 }
 
 func (e *Era) Fx() {
@@ -140,11 +142,14 @@ func (e *Era) Fx() {
 			StationID: stationID,
 			Percent:   percent,
 		})
+		sort.Slice(e.Uptime, func(i, j int) bool {
+			return e.Uptime[i].StationID < e.Uptime[j].StationID
+		})
 	}
 }
 
 func (e *Era) Output() {
 	for _, uptime := range e.Uptime {
-		println(uptime.StationID, uptime.Percent)
+		fmt.Println(uptime.StationID, uptime.Percent)
 	}
 }
