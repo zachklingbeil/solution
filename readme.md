@@ -1,31 +1,29 @@
-# Demo
+# Solution
 
 ## install
 
 ```sh
 # binary from "go build -o solution" included in repo
-git clone https://github.com/zachklingbeil/solution.git ~/zachklingbeil && cd ~/zachklingbeil
+git clone https://github.com/zachklingbeil/solution.git ~/zachklingbeil/solution && cd ~/zachklingbeil/solution
 ```
 
-### execute
-
 ```sh
+# input
 ./solution input1.txt
 
 # output
-
-# 0 100
-# 1 0
-# 2 75
+0 100
+1 0
+2 75
 ```
 
 ```sh
+# input
 ./solution input2.txt
 
 # output
-
-# 0 66
-# 1 100
+0 66
+1 100
 ```
 
 # Introduction
