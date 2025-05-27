@@ -70,8 +70,7 @@ func (e *Era) Input(path string) error {
 	return nil
 }
 
-// parseStations parses a line describing a station and its chargers.
-// It adds the station and its chargers to the Source map.
+// parseStations parses a line describing a station and its chargers, populating the Source map.
 func (e *Era) parseStations(line string) error {
 	value := strings.Fields(line)
 	stationID, _ := strconv.ParseUint(value[0], 10, 32) // Parse the station ID from the first field
@@ -91,10 +90,9 @@ func (e *Era) parseStations(line string) error {
 }
 
 // parseChargerLine parses a line describing a charger report and adds it to the correct station/charger.
-// Returns an error if the charger is not found in any station.
 func (e *Era) parseChargerLine(line string) error {
 	value := strings.Fields(line)
-	id, _ := strconv.ParseUint(value[0], 10, 32)    // Parse charger IDw
+	id, _ := strconv.ParseUint(value[0], 10, 32)    // Parse charger ID
 	start, _ := strconv.ParseUint(value[1], 10, 64) // Parse start time
 	end, _ := strconv.ParseUint(value[2], 10, 64)   // Parse end time
 	up, _ := strconv.ParseBool(value[3])            // Parse up status (true/false)
@@ -112,40 +110,53 @@ func (e *Era) parseChargerLine(line string) error {
 			return nil // Successfully added, exit
 		}
 	}
-	return fmt.Errorf("charger ID %d does not belong to any station", id) // Error if charger not found
+	return nil
 }
-
 func (e *Era) Fx() {
+	// Iterate over each station and its chargers
 	for stationID, chargers := range e.Source {
-		var totalUp, total uint64
+		var totalUp, total uint64 // Track total uptime and total tracked time for the station
+
+		// Iterate over each charger and its reports
 		for _, reports := range chargers {
+			// Initialize minStart and maxEnd to the first report's times
 			minStart, maxEnd, upTime := reports[0].Start, reports[0].End, uint64(0)
+
+			// Process each report for this charger
 			for _, r := range reports {
+				// Find the earliest start time
 				if r.Start < minStart {
 					minStart = r.Start
 				}
+				// Find the latest end time
 				if r.End > maxEnd {
 					maxEnd = r.End
 				}
+				// If the charger was up, add the duration to upTime
 				if r.Up {
 					upTime += r.End - r.Start
 				}
 			}
+			// Add the total tracked time for this charger to the station's total
 			total += maxEnd - minStart
+			// Add the total uptime for this charger to the station's totalUp
 			totalUp += upTime
 		}
-		percent := 0
+		percent := 0 // Default uptime percent
+		// Calculate uptime percentage if there is any tracked time
 		if total > 0 {
 			percent = int((totalUp * 100) / total)
 		}
+		// Append the result for this station
 		e.Uptime = append(e.Uptime, Uptime{
 			StationID: stationID,
 			Percent:   percent,
 		})
-		sort.Slice(e.Uptime, func(i, j int) bool {
-			return e.Uptime[i].StationID < e.Uptime[j].StationID
-		})
 	}
+	// Sort the Uptime slice by StationID
+	sort.Slice(e.Uptime, func(i, j int) bool {
+		return e.Uptime[i].StationID < e.Uptime[j].StationID
+	})
 }
 
 func (e *Era) Output() {
